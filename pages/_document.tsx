@@ -1,12 +1,13 @@
 import Document, { Html, Head, Main, NextScript, DocumentContext } from 'next/document';
 import { CssBaseline } from '@nextui-org/react';
 
-export default class MyDocument extends Document {
+class MyDocument extends Document {
     static async getInitialProps(ctx: DocumentContext) {
         const initialProps = await Document.getInitialProps(ctx);
+        const styles = <>{initialProps.styles}</>
         return {
             ...initialProps,
-            styles: <>{initialProps.styles}</>
+            StyleSheet: styles
         };
     }
 
@@ -22,3 +23,5 @@ export default class MyDocument extends Document {
         );
     }
 }
+
+export default MyDocument;
