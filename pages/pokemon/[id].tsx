@@ -1,13 +1,30 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { GetStaticProps, GetStaticPaths } from 'next'
 import { HeadLayout } from '../../components/layouts'
 import { IPokemonInfo, PokemonInfoTypeProps } from '../../ts'
 import { rest } from '../../api'
-import { Card, Grid, Row, Text, Col, Container } from '@nextui-org/react'
+import { Card, Grid, Row, Text, Col, Container, Button, useTheme, Table } from '@nextui-org/react'
 import Image from 'next/image'
-import { arrImagesVersion, arrOtherSprites } from '../../util/functions'
+import { arrImagesVersion, arrOtherSprites, isFavorite, onToggleFavorite } from '../../util/functions'
+import { filterHabilities } from '../../util/functions/filters'
+import { selectTypeHandle } from '../../ts/elements.types'
+import { column_moves, moves_options } from '../../constant'
 
 const PokemonPage: PokemonInfoTypeProps = ({ pokemon }) => {
+    // hooks
+    const [exist, setExist] = useState<boolean | undefined>()
+    const [moves, setMoves] = useState(pokemon.moves)
+    const { theme } = useTheme()
+    useEffect(() => {
+        setExist(isFavorite(pokemon.id))
+    })
+
+    // functions
+    const handleSelect: selectTypeHandle = ({ target }) => {
+        const { value } = target
+        setMoves(filterHabilities(pokemon.moves, value))
+    }
+
     return (
         <HeadLayout headTitle={pokemon.name}>
             <Grid.Container css={{ marginTop: '5px' }} gap={2}>
@@ -15,6 +32,12 @@ const PokemonPage: PokemonInfoTypeProps = ({ pokemon }) => {
                     <Card >
                         <Card.Header css={{ display: 'flex', justifyContent: 'space-between' }}>
                             <Text h1 transform='capitalize'>{"#" + pokemon.id + " " + pokemon.name}</Text>
+                            <Button
+                                color="gradient"
+                                onClick={() => setExist(onToggleFavorite(pokemon.id))}
+                                ghost={!exist}>
+                                {exist ? 'Eliminar de favoritos' : 'Guardar en favoritos'}
+                            </Button>
                         </Card.Header>
                         <Card.Body >
                             <Text h3>Sprites por generación:</Text>
@@ -30,11 +53,64 @@ const PokemonPage: PokemonInfoTypeProps = ({ pokemon }) => {
                                     </Col>
                                 ))}
                             </Row>
+                            <Col>
+                                <Text h3>Habilidades:</Text>
+                                <select
+                                    style={{
+                                        backgroundColor: theme?.colors.gray800.value,
+                                        border: 'none',
+                                        margin: '1rem 0',
+                                        padding: '.5rem',
+                                        border: 'solid 1px white',
+                                        borderRadius: '12px'
+                                    }}
+                                    onChange={handleSelect}
+                                >
+                                    {moves_options.map(({ label, value }, index) => (
+                                        <option key={index} value={value}>
+                                            {label}
+                                        </option>
+                                    ))}
+
+                                </select>
+
+                                <Table
+                                    bordered
+                                    shadow
+                                >
+                                    <Table.Header columns={column_moves}>
+                                        {({ id, label }) => (
+                                            <Table.Column key={id}>{label}</Table.Column>
+                                        )}
+                                    </Table.Header>
+                                    <Table.Body>
+                                        {moves.map((move, index) => (
+                                            <Table.Row key={index}>
+                                                <Table.Cell>{
+                                                    <Text transform='capitalize' >
+                                                        {move.version_group_details[0].level_learned_at}
+                                                    </Text>
+                                                }</Table.Cell>
+                                                <Table.Cell>{
+                                                    <Text transform='capitalize'>
+                                                        {move.move.name}
+                                                    </Text>
+                                                }</Table.Cell>
+
+                                            </Table.Row>
+                                        ))}
+
+                                    </Table.Body>
+
+                                </Table>
+
+
+                            </Col>
                         </Card.Body>
                     </Card>
                 </Grid>
 
-                <Grid xs={12} sm={4}>
+                <Grid xs={12} sm={4} css={{ height: 'fit-content' }}>
                     <Card hoverable css={{ padding: '30px' }}>
                         <Card.Body>
                             <Card.Image
@@ -54,7 +130,6 @@ const PokemonPage: PokemonInfoTypeProps = ({ pokemon }) => {
                                         width={70}
                                     />
                                 ))}
-
                             </Container>
                         </Card.Body>
                     </Card>
