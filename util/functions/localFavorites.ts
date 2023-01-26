@@ -25,3 +25,11 @@ export const isFavorite = (id: number) => {
     const idExist = favorites_storage.includes(id)
     return idExist
 }
+
+/**
+ * Retorna los pokemones favoritos
+ * @returns {number[]}
+ */
+export const pokemons = (): number[] => {
+    return JSON.parse(localStorage.getItem('favorites') ?? '[]')
+}
